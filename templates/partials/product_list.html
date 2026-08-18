@@ -1,0 +1,20 @@
+{% if not products %}
+<p class="muted">Không tìm thấy sản phẩm nào.</p>
+{% else %}
+<table class="product-table">
+    <thead>
+        <tr><th>Tên sản phẩm</th><th>Mã SP</th><th>Sửa đổi</th></tr>
+    </thead>
+    <tbody>
+        {% for p in products %}
+        <tr class="row-link"
+            hx-get="/products/{{ p.id }}" hx-target="#detail" hx-swap="innerHTML">
+            <td>{{ p.ten_sp }}</td>
+            <td>{{ p.ma_sp or '—' }}</td>
+            <td class="muted">{{ p.sua_doi_label or '—' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p class="muted count">{{ products|length }} kết quả</p>
+{% endif %}

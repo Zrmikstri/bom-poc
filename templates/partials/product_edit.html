@@ -1,0 +1,76 @@
+{% if not product %}
+<p class="placeholder">Không tìm thấy sản phẩm.</p>
+{% else %}
+<form id="edit-form" hx-post="/products/{{ product.id }}/edit" hx-target="#detail" hx-swap="innerHTML">
+    <div class="detail-header">
+        <div class="edit-grid">
+            <label>Tên sản phẩm
+                <input type="text" name="ten_sp" value="{{ product.ten_sp }}" required>
+            </label>
+            <label>Mã SP
+                <input type="text" name="ma_sp" value="{{ product.ma_sp or '' }}">
+            </label>
+            <label>Sửa đổi
+                <input type="text" name="sua_doi_label" value="{{ product.sua_doi_label or '' }}">
+            </label>
+        </div>
+    </div>
+
+    <table class="bom-table edit-table">
+        <thead>
+            <tr>
+                <th>Xưởng</th><th>Mã VL</th><th>Tên vật tư</th><th>Quy cách</th>
+                <th>ĐVT</th><th>SL/cái</th><th>Hao hụt</th><th>Tổng SL</th><th>YC CL</th><th></th>
+            </tr>
+        </thead>
+        <tbody id="edit-rows">
+            {% for l in lines %}
+            <tr>
+                <td><input type="text" name="xuong" value="{{ l.xuong or '' }}" list="xuong-options"></td>
+                <td><input type="text" name="ma_vl" value="{{ l.ma_vl or '' }}"></td>
+                <td><input type="text" name="ten_vl" value="{{ l.ten_vl or '' }}" required></td>
+                <td><input type="text" name="quy_cach" value="{{ l.quy_cach or '' }}"></td>
+                <td><input type="text" name="dvt" value="{{ l.dvt or '' }}"></td>
+                <td><input type="number" step="any" name="sl_cai" value="{{ l.sl_cai if l.sl_cai is not none else '' }}"></td>
+                <td><input type="number" step="any" name="hao_hut" value="{{ l.hao_hut if l.hao_hut is not none else '' }}"></td>
+                <td><input type="number" step="any" name="tong_sl" value="{{ l.tong_sl if l.tong_sl is not none else '' }}"></td>
+                <td><input type="text" name="yc_cl" value="{{ l.yc_cl or '' }}"></td>
+                <td><button type="button" class="btn-icon" onclick="this.closest('tr').remove()">✕</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <datalist id="xuong-options">
+        {% for w in all_workshops %}<option value="{{ w }}">{% endfor %}
+    </datalist>
+
+    <div class="edit-actions">
+        <button type="button" class="btn-secondary" onclick="addBlankRow()">+ Thêm dòng</button>
+        <button type="submit" class="btn-primary">Lưu</button>
+        <button type="button" class="btn-secondary"
+            hx-get="/products/{{ product.id }}" hx-target="#detail" hx-swap="innerHTML">Hủy</button>
+        <span class="muted" style="margin-left:auto">{{ lines|length }} dòng</span>
+    </div>
+</form>
+
+<script>
+function addBlankRow() {
+    const tbody = document.getElementById('edit-rows');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" name="xuong" list="xuong-options"></td>
+        <td><input type="text" name="ma_vl"></td>
+        <td><input type="text" name="ten_vl" required></td>
+        <td><input type="text" name="quy_cach"></td>
+        <td><input type="text" name="dvt"></td>
+        <td><input type="number" step="any" name="sl_cai"></td>
+        <td><input type="number" step="any" name="hao_hut"></td>
+        <td><input type="number" step="any" name="tong_sl"></td>
+        <td><input type="text" name="yc_cl"></td>
+        <td><button type="button" class="btn-icon" onclick="this.closest('tr').remove()">✕</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('input').focus();
+}
+</script>
+{% endif %}

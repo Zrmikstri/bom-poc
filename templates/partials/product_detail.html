@@ -1,0 +1,41 @@
+{% if not product %}
+<p class="placeholder">Không tìm thấy sản phẩm.</p>
+{% else %}
+<div class="detail-header">
+    <h2>{{ product.ten_sp }}</h2>
+    <div class="meta">
+        <span>Mã SP: <strong>{{ product.ma_sp or '—' }}</strong></span>
+        <span>Sửa đổi: <strong>{{ product.sua_doi_label or '—' }}</strong></span>
+        <span class="muted">Nguồn: {{ product.source_file }}</span>
+    </div>
+    <div class="detail-buttons">
+        <button class="btn-secondary"
+            hx-get="/products/{{ product.id }}/edit" hx-target="#detail" hx-swap="innerHTML">Sửa</button>
+        <a class="api-link" href="/api/products/{{ product.id }}/bom" target="_blank">Xem JSON &rarr;</a>
+    </div>
+</div>
+
+<table class="bom-table">
+    <thead>
+        <tr>
+            <th>Xưởng</th><th>Mã VL</th><th>Tên vật tư</th><th>Quy cách</th>
+            <th>ĐVT</th><th>SL/cái</th><th>Hao hụt</th><th>Tổng SL</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for l in lines %}
+        <tr style="background:{{ colors.get(l.xuong, default_color) }}">
+            <td>{{ l.xuong or '—' }}</td>
+            <td>{{ l.ma_vl or '' }}</td>
+            <td>{{ l.ten_vl }}</td>
+            <td>{{ l.quy_cach or '' }}</td>
+            <td>{{ l.dvt or '' }}</td>
+            <td class="num">{{ l.sl_cai if l.sl_cai is not none else '' }}</td>
+            <td class="num">{{ l.hao_hut if l.hao_hut is not none else '' }}</td>
+            <td class="num">{{ l.tong_sl if l.tong_sl is not none else '' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p class="muted count">{{ lines|length }} dòng vật tư</p>
+{% endif %}

@@ -1,0 +1,141 @@
+:root {
+    --navy: #1F4E79;
+    --navy-mid: #2E75B6;
+    --ink: #1a1a1a;
+    --line: #d9dde1;
+    --bg: #f7f8fa;
+}
+
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+}
+
+.topbar {
+    background: var(--navy);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.topbar h1 { font-size: 18px; margin: 0; font-weight: 600; }
+.stats { display: flex; gap: 18px; font-size: 13px; }
+.stats .muted { color: #cdd8e3; }
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.6fr);
+    gap: 16px;
+    padding: 16px;
+    align-items: start;
+}
+@media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+}
+
+.panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.list-panel { display: flex; flex-direction: column; max-height: calc(100vh - 100px); }
+.detail-panel { padding: 18px 20px; max-height: calc(100vh - 100px); overflow-y: auto; }
+
+.controls {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-bottom: 1px solid var(--line);
+    background: #fafbfc;
+}
+.controls input[type="search"] {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 14px;
+}
+.controls select {
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 13px;
+    max-width: 220px;
+}
+
+#results { overflow-y: auto; }
+
+.product-table, .bom-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.product-table th, .bom-table th {
+    text-align: left;
+    background: var(--navy-mid);
+    color: #fff;
+    padding: 8px 10px;
+    position: sticky; top: 0;
+    font-weight: 600;
+}
+.product-table td, .bom-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--line);
+}
+.row-link { cursor: pointer; }
+.row-link:hover { background: #eef4fa; }
+.bom-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.muted { color: #6b7280; font-size: 12px; }
+.count { padding: 8px 12px; margin: 0; }
+.placeholder { color: #9aa3ad; padding: 40px 10px; text-align: center; }
+
+.detail-header { margin-bottom: 14px; }
+.detail-header h2 { margin: 0 0 6px; font-size: 17px; }
+.detail-header .meta { display: flex; gap: 16px; font-size: 13px; flex-wrap: wrap; margin-bottom: 6px; }
+.api-link { font-size: 12px; color: var(--navy-mid); text-decoration: none; }
+.api-link:hover { text-decoration: underline; }
+.detail-buttons { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+
+/* Upload bar */
+.upload-bar {
+    display: flex; gap: 8px; align-items: center;
+    padding: 12px; border-bottom: 1px solid var(--line); background: #fff;
+}
+.upload-bar input[type="file"] { flex: 1; font-size: 12px; }
+#upload-result:empty { display: none; }
+.upload-msg { padding: 8px 12px; font-size: 13px; }
+.upload-msg.ok  { background: #e6f4ea; color: #1e6b34; }
+.upload-msg.err { background: #fbe7e7; color: #a12a2a; }
+
+/* Buttons */
+.btn-primary, .btn-secondary, .btn-icon {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    background: #fff;
+}
+.btn-primary { background: var(--navy-mid); color: #fff; border-color: var(--navy-mid); }
+.btn-primary:hover { background: var(--navy); }
+.btn-secondary:hover { background: #f0f3f6; }
+.btn-icon { padding: 4px 8px; color: #a12a2a; border-color: transparent; }
+.btn-icon:hover { background: #fbe7e7; border-radius: 4px; }
+
+/* Edit form */
+.edit-grid { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.edit-grid label { display: flex; flex-direction: column; font-size: 12px; color: #555; gap: 4px; }
+.edit-grid input { padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; min-width: 180px; }
+.edit-table input {
+    width: 100%; border: 1px solid transparent; background: transparent;
+    padding: 4px 6px; font-size: 12px; border-radius: 3px;
+}
+.edit-table input:hover, .edit-table input:focus {
+    border-color: var(--line); background: #fff; outline: none;
+}
+.edit-table td { padding: 2px 4px; }
+.edit-actions { display: flex; gap: 10px; align-items: center; margin-top: 12px; }

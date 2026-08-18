@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Tổng hợp Định mức{% endblock %}
+{% block content %}
+<header class="topbar">
+    <h1>Tổng hợp Định mức NVL</h1>
+    <div class="stats">
+        <span><strong>{{ stats.n_products }}</strong> sản phẩm</span>
+        <span><strong>{{ stats.n_lines }}</strong> dòng vật tư</span>
+        <span><strong>{{ stats.n_workshops }}</strong> xưởng</span>
+        {% if stats.last_import %}<span class="muted">Cập nhật: {{ stats.last_import }}</span>{% endif %}
+    </div>
+</header>
+
+<main class="layout">
+    <section class="panel list-panel">
+        <form class="upload-bar" hx-post="/upload" hx-target="#upload-result" hx-swap="innerHTML"
+            hx-encoding="multipart/form-data" hx-on::after-request="this.reset()">
+            <input type="file" name="files" accept=".xlsx,.xls" multiple required>
+            <button type="submit" class="btn-secondary">Tải lên file DM</button>
+        </form>
+        <div id="upload-result"></div>
+
+        <div class="controls">
+            <input type="search" name="q" placeholder="Tìm theo tên hoặc mã sản phẩm..." hx-get="/search"
+                hx-trigger="keyup changed delay:300ms, search" hx-target="#results" hx-include="[name='workshop']"
+                autofocus>
+            <select name="workshop" hx-get="/search" hx-trigger="change" hx-target="#results" hx-include="[name='q']">
+                <option value="">Tất cả xưởng</option>
+                {% for w in workshops %}
+                <option value="{{ w }}">{{ w }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div id="results" hx-get="/search" hx-trigger="load">
+            <p class="muted">Đang tải...</p>
+        </div>
+    </section>
+
+    <section class="panel detail-panel" id="detail">
+        <p class="placeholder">Chọn một sản phẩm bên trái để xem chi tiết định mức.</p>
+    </section>
+</main>
+{% endblock %}

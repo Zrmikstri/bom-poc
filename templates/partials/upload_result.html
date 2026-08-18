@@ -1,0 +1,10 @@
+<div class="upload-results">
+    {% for fname, ok, msg in results %}
+    <div class="upload-msg {{ 'ok' if ok else 'err' }}"><strong>{{ fname }}</strong> — {{ msg }}</div>
+    {% endfor %}
+</div>
+{% if any_ok %}
+<div id="results" hx-swap-oob="true">
+    {% include "partials/product_list.html" %}
+</div>
+{% endif %}
