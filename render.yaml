@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: bom-dashboard
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT --workers 2
+    envVars:
+      - key: BOM_USERNAME
+        sync: false
+      - key: BOM_PASSWORD
+        sync: false
+    disk:
+      name: bom-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1

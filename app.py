@@ -8,8 +8,11 @@ Run:
 Then open http://localhost:8000  (or http://<this-machine's-IP>:8000 for teammates)
 """
 import os
+import secrets
 import tempfile
-from fastapi import FastAPI, Request, Query, UploadFile, File, Form
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request, Query, UploadFile, File, Form, Depends, HTTPException, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -18,8 +21,26 @@ from db import get_conn, init_db, DB_PATH
 from extractors import extract_file, parse_file_meta, ver_num, format_date_str
 from import_data import upsert_product, load_rows, get_or_create
 
+load_dotenv()
+
+BOM_USERNAME = os.environ.get('BOM_USERNAME', 'admin')
+BOM_PASSWORD = os.environ.get('BOM_PASSWORD', 'changeme')
+_security = HTTPBasic()
+
+
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(_security)):
+    user_ok = secrets.compare_digest(credentials.username, BOM_USERNAME)
+    pass_ok = secrets.compare_digest(credentials.password, BOM_PASSWORD)
+    if not (user_ok and pass_ok):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Sai tên đăng nhập hoặc mật khẩu',
+            headers={'WWW-Authenticate': 'Basic'},
+        )
+    return credentials.username
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app = FastAPI(title='BOM Dashboard (POC)')
+app = FastAPI(title='BOM Dashboard (POC)', dependencies=[Depends(verify_credentials)])
 app.mount('/static', StaticFiles(directory=os.path.join(BASE_DIR, 'static')), name='static')
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, 'templates'))
 
