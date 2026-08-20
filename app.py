@@ -267,47 +267,111 @@ async def upload_file(request: Request, files: list[UploadFile] = File(...)):
     })
 
 
-# ---------- JSON API (for other systems: ERP, reporting, etc.) ----------
-
-@app.get('/api/products')
-def api_products(q: str = ''):
+@app.get('/materials')
+def materials_page(request: Request):
     conn = get_conn()
-    sql = 'SELECT id, ten_sp, ma_sp, sua_doi_label FROM products'
-    params = []
-    if q:
-        sql += ' WHERE ten_sp LIKE ? OR ma_sp LIKE ?'
-        params = [f'%{q}%', f'%{q}%']
-    rows = [dict(r) for r in conn.execute(sql, params)]
+    products = conn.execute(
+        'SELECT id, ten_sp, ma_sp FROM products ORDER BY ten_sp').fetchall()
     conn.close()
-    return JSONResponse(rows)
+    return templates.TemplateResponse(request, 'materials.html', {'products': products})
 
 
-@app.get('/api/products/{product_id}/bom')
-def api_product_bom(product_id: int):
+def _rollup_query(conn, product_ids):
+    """Aggregate NVL quantities across the given product ids.
+    product_ids=None (or empty) means ALL products — the default."""
+    if not product_ids:
+        return []
+    
+    if product_ids:
+        placeholders = ','.join('?' for _ in product_ids)
+        where = f'WHERE b.product_id IN ({placeholders})'
+        params = list(product_ids)
+        sql = f'''
+            SELECT m.ma_vl, m.ten_vl, b.dvt,
+                SUM(COALESCE(b.tong_sl, b.sl_cai, 0)) AS total_qty,
+                COUNT(DISTINCT b.product_id) AS n_products
+            FROM bom_lines b
+            JOIN materials m ON m.id = b.material_id
+            {where}
+            GROUP BY m.id, b.dvt
+            ORDER BY total_qty DESC
+        '''
+        return conn.execute(sql, params).fetchall()
+
+
+@app.get('/materials/rollup')
+def materials_rollup(request: Request, product_id: list[int] = Query(default=[])):
     conn = get_conn()
-    product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
-    if not product:
-        return JSONResponse({'error': 'not found'}, status_code=404)
-    lines = conn.execute(
-        'SELECT w.xuong, m.ma_vl, m.ten_vl, b.quy_cach, b.dvt, b.sl_cai, b.hao_hut, b.tong_sl, b.yc_cl '
-        'FROM bom_lines b '
-        'LEFT JOIN workshops w ON w.id = b.workshop_id '
-        'LEFT JOIN materials m ON m.id = b.material_id '
-        'WHERE b.product_id = ?', (product_id,)).fetchall()
+    rows = _rollup_query(conn, product_id)
     conn.close()
-    return JSONResponse({'product': dict(product), 'bom_lines': [dict(l) for l in lines]})
+    return templates.TemplateResponse(request, 'partials/material_rollup.html', {
+        'rows': rows, 'n_selected': len(product_id) if product_id else 0,
+    })
 
-
-@app.get('/api/materials/{ten_vl}/usage')
-def api_material_usage(ten_vl: str):
-    """Which products use a given material — handy for 'where-used' lookups."""
+@app.get('/materials/rollup/export')
+def materials_rollup_export(product_id: list[int] = Query(default=[])):
+    import csv
+    import io as _io
     conn = get_conn()
-    rows = conn.execute(
-        'SELECT p.ten_sp, p.ma_sp, w.xuong, b.sl_cai, b.dvt '
-        'FROM bom_lines b '
-        'JOIN products p ON p.id = b.product_id '
-        'JOIN materials m ON m.id = b.material_id '
-        'LEFT JOIN workshops w ON w.id = b.workshop_id '
-        'WHERE m.ten_vl LIKE ?', (f'%{ten_vl}%',)).fetchall()
+    rows = _rollup_query(conn, product_id)
     conn.close()
-    return JSONResponse([dict(r) for r in rows])
+
+    buf = _io.StringIO()
+    buf.write('\ufeff')  # BOM so Excel opens UTF-8/Vietnamese correctly
+    writer = csv.writer(buf)
+    writer.writerow(['Mã VL', 'Tên vật tư', 'ĐVT', 'Tổng SL cần', 'Số sản phẩm dùng'])
+    for r in rows:
+        writer.writerow([r['ma_vl'] or '', r['ten_vl'], r['dvt'] or '',
+                          f"{r['total_qty']:.3f}" if r['total_qty'] is not None else '',
+                          r['n_products']])
+
+    return HTMLResponse(
+        content=buf.getvalue(),
+        media_type='text/csv',
+        headers={'Content-Disposition': 'attachment; filename="tong_hop_nvl.csv"'},
+    )
+
+# # ---------- JSON API (for other systems: ERP, reporting, etc.) ----------
+
+# @app.get('/api/products')
+# def api_products(q: str = ''):
+#     conn = get_conn()
+#     sql = 'SELECT id, ten_sp, ma_sp, sua_doi_label FROM products'
+#     params = []
+#     if q:
+#         sql += ' WHERE ten_sp LIKE ? OR ma_sp LIKE ?'
+#         params = [f'%{q}%', f'%{q}%']
+#     rows = [dict(r) for r in conn.execute(sql, params)]
+#     conn.close()
+#     return JSONResponse(rows)
+
+
+# @app.get('/api/products/{product_id}/bom')
+# def api_product_bom(product_id: int):
+#     conn = get_conn()
+#     product = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,)).fetchone()
+#     if not product:
+#         return JSONResponse({'error': 'not found'}, status_code=404)
+#     lines = conn.execute(
+#         'SELECT w.xuong, m.ma_vl, m.ten_vl, b.quy_cach, b.dvt, b.sl_cai, b.hao_hut, b.tong_sl, b.yc_cl '
+#         'FROM bom_lines b '
+#         'LEFT JOIN workshops w ON w.id = b.workshop_id '
+#         'LEFT JOIN materials m ON m.id = b.material_id '
+#         'WHERE b.product_id = ?', (product_id,)).fetchall()
+#     conn.close()
+#     return JSONResponse({'product': dict(product), 'bom_lines': [dict(l) for l in lines]})
+
+
+# @app.get('/api/materials/{ten_vl}/usage')
+# def api_material_usage(ten_vl: str):
+#     """Which products use a given material — handy for 'where-used' lookups."""
+#     conn = get_conn()
+#     rows = conn.execute(
+#         'SELECT p.ten_sp, p.ma_sp, w.xuong, b.sl_cai, b.dvt '
+#         'FROM bom_lines b '
+#         'JOIN products p ON p.id = b.product_id '
+#         'JOIN materials m ON m.id = b.material_id '
+#         'LEFT JOIN workshops w ON w.id = b.workshop_id '
+#         'WHERE m.ten_vl LIKE ?', (f'%{ten_vl}%',)).fetchall()
+#     conn.close()
+#     return JSONResponse([dict(r) for r in rows])

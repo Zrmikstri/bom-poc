@@ -1,0 +1,27 @@
+{% if not rows %}
+<p class="muted">Không có dữ liệu (kiểm tra đã chọn sản phẩm chưa).</p>
+{% else %}
+<table class="bom-table">
+    <thead>
+        <tr>
+            <th>Mã VL</th>
+            <th>Tên vật tư</th>
+            <th>ĐVT</th>
+            <th>Tổng SL cần</th>
+            <th>Số SP dùng</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in rows %}
+        <tr>
+            <td>{{ r.ma_vl or '' }}</td>
+            <td>{{ r.ten_vl }}</td>
+            <td>{{ r.dvt or '' }}</td>
+            <td class="num"><strong>{{ '%.3f'|format(r.total_qty) if r.total_qty is not none else '' }}</strong></td>
+            <td class="num">{{ r.n_products }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p class="muted count">{{ rows|length }} loại vật tư, tính trên {{ n_selected }} sản phẩm đã chọn</p>
+{% endif %}

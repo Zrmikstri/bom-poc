@@ -9,17 +9,23 @@
         <span class="muted">Nguồn: {{ product.source_file }}</span>
     </div>
     <div class="detail-buttons">
-        <button class="btn-secondary"
-            hx-get="/products/{{ product.id }}/edit" hx-target="#detail" hx-swap="innerHTML">Sửa</button>
-        <a class="api-link" href="/api/products/{{ product.id }}/bom" target="_blank">Xem JSON &rarr;</a>
+        <button class="btn-secondary" hx-get="/products/{{ product.id }}/edit" hx-target="#detail"
+            hx-swap="innerHTML">Sửa</button>
+        <!-- <a class="api-link" href="/api/products/{{ product.id }}/bom" target="_blank">Xem JSON &rarr;</a> -->
     </div>
 </div>
 
 <table class="bom-table">
     <thead>
         <tr>
-            <th>Xưởng</th><th>Mã VL</th><th>Tên vật tư</th><th>Quy cách</th>
-            <th>ĐVT</th><th>SL/cái</th><th>Hao hụt</th><th>Tổng SL</th>
+            <th>Xưởng</th>
+            <th>Mã VL</th>
+            <th>Tên vật tư</th>
+            <th>Quy cách</th>
+            <th>ĐVT</th>
+            <th>SL/cái</th>
+            <th>Hao hụt</th>
+            <th>Tổng SL</th>
         </tr>
     </thead>
     <tbody>

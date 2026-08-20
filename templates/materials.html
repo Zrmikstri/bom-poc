@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Tổng hợp Nguyên vật liệu{% endblock %}
+{% block content %}
+<header class="topbar">
+    <h1>Tổng hợp NVL để đặt hàng</h1>
+    <a class="nav-link" href="/">&larr; Về danh sách sản phẩm</a>
+</header>
+
+<main class="layout">
+    <section class="panel list-panel">
+        <div class="controls">
+            <input type="search" id="product-filter" placeholder="Lọc sản phẩm..." onkeyup="filterProducts(this.value)">
+        </div>
+        <div class="checklist-actions">
+            <button type="button" class="btn-secondary" onclick="toggleAll(true)">Chọn tất cả</button>
+            <button type="button" class="btn-secondary" onclick="toggleAll(false)">Bỏ chọn tất cả</button>
+        </div>
+        <form id="rollup-form">
+            <div id="product-checklist" class="checklist">
+                {% for p in products %}
+                <label class="check-row" data-name="{{ (p.ten_sp ~ ' ' ~ (p.ma_sp or ''))|lower }}">
+                    <input type="checkbox" name="product_id" value="{{ p.id }}">
+                    <span>{{ p.ten_sp }}</span>
+                    <span class="muted">{{ p.ma_sp or '' }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </form>
+        <div class="controls">
+            <button type="button" class="btn-primary" style="width:100%" onclick="recalc()">Tính tổng</button>
+        </div>
+    </section>
+
+    <section class="panel detail-panel">
+        <div class="rollup-header">
+            <h2>Tổng NVL cần đặt</h2>
+            <a id="export-link" class="btn-secondary" href="/materials/rollup/export" target="_blank">Xuất CSV</a>
+        </div>
+        <div id="rollup-result" hx-get="/materials/rollup" hx-trigger="load" hx-swap="innerHTML">
+            <p class="muted">Đang tải...</p>
+        </div>
+    </section>
+</main>
+
+<script>
+    function filterProducts(q) {
+        q = q.toLowerCase();
+        document.querySelectorAll('#product-checklist .check-row').forEach(row => {
+            row.style.display = row.dataset.name.includes(q) ? '' : 'none';
+        });
+    }
+    function toggleAll(state) {
+        document.querySelectorAll('#product-checklist input[type=checkbox]').forEach(cb => {
+            if (cb.closest('.check-row').style.display !== 'none') cb.checked = state;
+        });
+    }
+    function selectedIds() {
+        return [...document.querySelectorAll('#product-checklist input:checked')].map(cb => cb.value);
+    }
+    function recalc() {
+        const ids = selectedIds();
+        const qs = ids.map(id => `product_id=${id}`).join('&');
+        htmx.ajax('GET', `/materials/rollup?${qs}`, { target: '#rollup-result', swap: 'innerHTML' });
+        document.getElementById('export-link').href = `/materials/rollup/export?${qs}`;
+    }
+</script>
+{% endblock %}
